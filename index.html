@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="author" content="">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="css/normalize.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <!-- Data table -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.jqueryui.min.css">
+    <script src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.18/js/dataTables.jqueryui.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+  <script type="text/javascript">
+      $(document).ready(function() {
+        maketable = function (results) {
+            console.log('dataResult', results);
+            var t = $('#table_id').DataTable({
+                 data: results,
+                 columns: [{title: 'Primeiro Nome', data: 'name.first'}, {title: 'Email', data: 'email'},{ title: 'Idade', data: 'dob.age'}, { title: 'Idade', data: 'gender'}]
+            });
+        }
+        makegraph = function(result) {
+            google.charts.load('current', {packages: ['corechart']});
+            var array_data = [["Pessoa", {label: 'Idade', type: 'number'} ]];
+            for(d of dataResult) {
+                array_data.push([d.name.first, d.dob.age]);
+            }
+            console.log('arraydata', array_data);
+            google.charts.setOnLoadCallback(drawChart);
+            function drawChart() {
+              var data = google.visualization.arrayToDataTable(array_data);
+              var view = new google.visualization.DataView(data);
+
+              var options = {
+                title: "Idade pessoas tabela",
+                width: 600,
+                height: 390,
+                bar: {groupWidth: "95%"},
+                legend: { position: "none" },
+              };
+              var chart = new google.visualization.ColumnChart(document.getElementById("columnchart_values"));
+              chart.draw(view, options);
+            }
+        }
+        makegender = function(result) {
+            google.charts.load('current', {packages: ['corechart']});
+            var array_data = [["Gênero", "Quantidade" ]];
+            var male = 0;
+            var female = 0;
+            for(d of dataResult) {
+                if(d.gender === "male"){
+                    male++
+                } else {
+                    female++
+                }
+            }
+            array_data.push(["Masculino", male]);
+            array_data.push(["Feminino", female]);
+            console.log('arraydata', array_data);
+            google.charts.setOnLoadCallback(drawChart);
+            function drawChart() {
+              var data = google.visualization.arrayToDataTable(array_data);
+              var view = new google.visualization.DataView(data);
+
+              var options = {
+                title: "Pessoas por gênero",
+                width: 600,
+                height: 390,
+                bar: {groupWidth: "95%"},
+              };
+              var chart = new google.visualization.PieChart(document.getElementById("gender_values"));
+              chart.draw(view, options);
+            }
+        }
+        makegeograph = function(result) {
+             google.charts.load('current', { 'packages': ['map'], "mapsApiKey": "AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY" });
+             google.charts.setOnLoadCallback(drawMap);
+             var array_data = [["Lat", "Long", "Name" ]];
+             for(d of dataResult) {
+                array_data.push([Number(d.location.coordinates.latitude), Number(d.location.coordinates.longitude), d.location.street]);
+             }
+            console.log('arraydata', array_data);
+            function drawMap() {
+              var data = google.visualization.arrayToDataTable(array_data);
+              var options = {
+                showTooltip: true,
+                showInfoWindow: true
+               };
+              var map = new google.visualization.Map(document.getElementById('chart_div'));
+              map.draw(data, options);
+            }
+        }
+        var dataResult = []
+        $.ajax({
+            url: 'https://randomuser.me/api/?results=20',
+            dataType: 'json',
+            success: function(data) {
+                console.log(data);
+                dataResult = data.results;
+                maketable(dataResult);
+                makegraph(dataResult);
+                makegender(dataResult);
+                makegeograph(dataResult);
+            }
+        });
+      });
+  </script>
+  <div>
+      <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <h1> Pessoas</h1>
+            <table id="table_id" class="cell-border compact stripe"></table>
+            <div id="columnchart_values"></div>
+            <div id="gender_values"></div>
+            <div id="chart_div"></div>
+        </div>
+      </div>
+  </div>
+</body>
+
+</html>
